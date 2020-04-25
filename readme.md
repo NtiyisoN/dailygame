@@ -1,0 +1,4 @@
+
+Compile and run:
+
+	make
