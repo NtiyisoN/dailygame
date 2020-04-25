@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <vector>
 #include <time.h>
-
+#include <string.h>
 
 /*
 The state upon which I will deem this to be version "0.1":
@@ -15,11 +15,16 @@ The state upon which I will deem this to be version "0.1":
 ✓ 5. The game gives you income for elapsed time.
 */
 
+/*
+Version "0.2":
+✓ 1. upgrading character stats by spending gold
+*/
+
 
 const char * STRING_FILENAME_SAVE = "save_dailygame";
 
 const int seconds_per_tick = 1;
-const int income_per_tick  = 2;
+const int income_per_tick  = 1;
 
 const int seconds_max_per_seesion = (32 * 60 * 60);
 
@@ -38,13 +43,13 @@ struct gamestate {
 
 void print_gamestate( const struct gamestate gs)
 {
-	printf(" gs.time_game_created   =%lu\n" , gs.time_game_created    );
-	printf(" gs.time_last_saved     =%lu\n" , gs.time_last_saved      );
-	printf(" gs.player.money        =%d\n"  , gs.player.money         );
-	printf(" gs.player.level        =%d\n"  , gs.player.level         );
-	printf(" gs.player.health       =%d\n"  , gs.player.health        );
-	printf(" gs.player.bonus_attack =%d\n"  , gs.player.bonus_attack  );
-	printf(" gs.player.bonus_defense=%d\n"  , gs.player.bonus_defense );
+	printf("gs.time_game_created	%lu\n" , gs.time_game_created    );
+	printf("gs.time_last_saved	%lu\n" , gs.time_last_saved      );
+	printf("gs.player.money 	%d\n"  , gs.player.money         );
+	printf("gs.player.level 	%d\n"  , gs.player.level         );
+	printf("gs.player.health	%d\n"  , gs.player.health        );
+	printf("gs.player.bonus_attack	%d\n"  , gs.player.bonus_attack  );
+	printf("gs.player.bonus_defense	%d\n"  , gs.player.bonus_defense );
 }
 
 
@@ -148,12 +153,71 @@ bool does_savefile_exist(const char * const filename) {
 }
 
 
+int
+get_upgrade_cost(
+		int const desired_level
+) {
+	return ( 4 << (desired_level));
+}
 
 
+void
+player_upgrade_attack(
+		struct gamestate * gs
+) {
+	int const upgrade_cost = get_upgrade_cost(1 + (gs->player.bonus_attack));
+	if( gs->player.money > upgrade_cost ) {
+		gs->player.money -= upgrade_cost;
+		(++(gs->player.bonus_attack));
+		printf("Upgraded attack to level:%d. Cost:%d\n" , gs->player.bonus_attack , upgrade_cost);
+	} else {
+		printf("insufficient funds to upgrade attack to level %d; need:%d , have:%d\n" , gs->player.bonus_attack , upgrade_cost , gs->player.money );
+	}
+}
 
 
-int main()
+void
+player_upgrade_defense(
+		struct gamestate * gs
+) {
+	int const upgrade_cost = get_upgrade_cost(1 + (gs->player.bonus_defense));
+	if( gs->player.money > upgrade_cost ) {
+		gs->player.money -= upgrade_cost;
+		(++(gs->player.bonus_defense));
+		printf("Upgraded defense to level:%d. Cost:%d\n" , gs->player.bonus_defense , upgrade_cost);
+	} else {
+		printf("insufficient funds to upgrade defense to level %d; need:%d , have:%d\n" , gs->player.bonus_defense , upgrade_cost , gs->player.money );
+	}
+}
+
+
+void print_cli_help() {
+	printf("-h	print help\n");
+	printf("-a	upgrade attack\n");
+	printf("-d	upgrade defense\n");
+}
+
+
+int main(int argc , char * argv[])
 {
+	struct {
+		bool upgrade_attack = false;
+		bool upgrade_defense = false;
+	} flags;
+
+	for(int i = 1; i < argc; ++i) {
+		// TODO
+		if( 0 == strcmp(argv[i] , "-h") ) {
+			print_cli_help();
+		} else if( 0 == strcmp(argv[i] , "-a")  ) {
+			flags.upgrade_attack = true;
+		} else if( 0 == strcmp(argv[i] , "-d") ) {
+			flags.upgrade_defense = true;
+		} else {
+			printf("unrecognized option '%s'" , argv[i]);
+		}
+	}
+
 	time_t gametime = time(NULL);
 	printf("time: %lu\n" , gametime);
 
@@ -171,15 +235,31 @@ int main()
 
 	// This is where the "game" starts
 	int elapsed = calculate_elapsed_ticks(state.time_last_saved , gametime);
-	printf("elapsed:%d\n" , elapsed );
+	printf("elapsed	%d\n" , elapsed );
 
 	int income = elapsed * income_per_tick;
-	printf("income:%d\n" , income );
+	printf("income	%d\n" , income );
 
 	state.player.money += income;
+
+
+
+	if(flags.upgrade_attack) {
+		printf("upgrading attack\n");
+		player_upgrade_attack(&state);
+	}
+	if(flags.upgrade_defense) {
+		printf("upgrading defense\n");
+		player_upgrade_defense(&state);
+	}
+
+
 
 	print_gamestate(state);
 
 
 	save_game(STRING_FILENAME_SAVE , &state , gametime);
+
+
+	return 0;
 }
