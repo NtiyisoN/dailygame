@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <assert.h>
-#include <ncurses.h>
 #include <unistd.h>
 #include <vector>
 #include <time.h>
