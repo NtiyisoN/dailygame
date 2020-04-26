@@ -8,7 +8,7 @@ Needs `g++` to compile.
 
 
 Goals for version "0.3":
-1.  (progress) You need to get higher levels in order to improve your stats.
+1. ✓(progress) You need to get higher levels in order to improve your stats.
 2.  (progress) You can upgrade your health.
 3.  (progress) You can upgrade your income. (remember to save the player's income in savefile)
 4.  You can choose the level of foe which you want to fight against.

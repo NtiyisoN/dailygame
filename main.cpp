@@ -201,6 +201,10 @@ void
 player_upgrade_attack(
 		struct gamestate * gs
 ) {
+	if( gs->player.level >= gs->player.bonus_attack ) {
+		printf( "You cannot upgrade attack above your character level!\n" );
+		return;
+	}
 	int const upgrade_cost = get_upgrade_cost(1 + (gs->player.bonus_attack));
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
@@ -216,6 +220,10 @@ void
 player_upgrade_defense(
 		struct gamestate * gs
 ) {
+	if( gs->player.level >= gs->player.bonus_defense ) {
+		printf( "You cannot upgrade defense above your character level!\n" );
+		return;
+	}
 	int const upgrade_cost = get_upgrade_cost(1 + (gs->player.bonus_defense));
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
