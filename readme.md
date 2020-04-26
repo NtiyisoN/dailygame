@@ -16,13 +16,13 @@ The state upon which I will deem this to be version "0.1":
 
 
 Version "0.2":
-✓ 1. upgrading character stats by spending gold
-✓ 2. rudimentary combat system
-✓ 3. healing wounds with money
-  4. leveling(the level doesn't need to really add anything, it will be enough if it means the player has to fight harder foes)
-  5. a way to fight progressively harder foes with better rewards, instead of only gathering gold that does nothing
+✓ 1. You can upgrade character stats by spending gold.
+✓ 2. You can fight(rudimentary combat system).
+✓ 3. You can restore HP.
+  4. You can level up leveling(at this point, the leveling won't really add anything, it will only mean the player has to fight harder foes to gain higher levels).
+  5. You can (and have to) fight fight progressively harder foes with better rewards.
 
 
 for version "1.0":
-  1. robust, flexible savefile: more database-like. maybe tab-separated key-value pairs, so that stuff can move around, be added etc.
-  2. separation between "log"(mostly for debug) and "interface"(what the player should see)
+  1. Robust, flexible savefile: more database-like. maybe tab-separated key-value pairs, so that stuff can move around, be added etc.
+  2. Separation between "log"(mostly for debug) and "interface"(what the player should see)
