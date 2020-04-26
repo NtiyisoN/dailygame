@@ -11,7 +11,7 @@
 const char * STRING_FILENAME_SAVE = "0.save";
 
 const int SECONDS_PER_TICK = 1;
-const int INCOME_TICKS_PER_TIMEUNIT = 0x4;
+const int INCOME_TICKS_PER_TIMEUNIT = 0x10;
 const int INCOME_PER_TICK  = 1;
 
 
@@ -37,8 +37,8 @@ CombatEntity::CombatEntity(int const _level) {
 	int const hp = _level * 4;
 	hp_current = hp;
 	hp_max = hp;
-	bonus_attack =  2 * _level;
-	bonus_defense = 2 * _level;
+	bonus_attack =  _level;
+	bonus_defense = _level;
 }
 
 CombatEntity::CombatEntity() {

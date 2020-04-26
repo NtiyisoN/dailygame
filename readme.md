@@ -27,6 +27,7 @@ Goals for version "0.4":
 2. (mmorpg-parody) Arbitrarily demand to wait some time when upgrading anything. (maybe this should be optional? or some funny mechanic, in which you can spend money to hasten the process)
 
 
+
 Required for version "1.0":
 
 1.  Robust, flexible savefile: more database-like. maybe tab-separated key-value pairs, so that stuff can move around, be added etc.
@@ -38,3 +39,6 @@ Required for version "1.0":
 
 Unimportant gimmicks, do it eventually(maybe even never):
 1. "Inventory" - You can store items(whatever that will be). (it's more important to do the generic progression, and only eventually work on non-core stuff that adds complexity without doin the core)
+2. "Combat" - add complexity to it
+3. "RPG" - more player character stats
+4. "name" - add ability to name your character
