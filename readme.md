@@ -26,6 +26,7 @@ Goals for version "0.4":
 1. (mmorpg-parody) Arbitrarily restrict the player from doing actions, so they can only do a few things per day. (Stamina?)
 2. (mmorpg-parody) Arbitrarily demand to wait some time when upgrading anything. (maybe this should be optional? or some funny mechanic, in which you can spend money to hasten the process)
 3. (mmorpg-parody) Arbitrarily restrict the player's capacity to carry money, so that they have to upgrade their vault. This will be a yet another money/time sink!
+3.1. Helper function: display how long it will take to fill your vault.
 
 
 Required for version "1.0":
