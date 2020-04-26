@@ -23,7 +23,7 @@ struct CombatEntity {
 
 CombatEntity::CombatEntity(int const _level) {
 	level = _level;
-	int const hp = 8 + _level * 2;
+	int const hp = 2 + _level * 2;
 	hp_current = hp;
 	hp_max = hp;
 	bonus_attack =  _level;
@@ -248,12 +248,12 @@ combat_perform_attack(
 		) {
 	int dice_roll = roll_d6();
 	int damage_roll = dice_roll + attacker->bonus_attack + (-target->bonus_defense) ;
-	printf( "damage_roll:%d(diceroll:%d, atk:%d , def:%d , " , damage_roll , dice_roll , attacker->bonus_attack , target->bonus_defense);
+	printf( "damage_roll:%d(roll:%d,a:%d,d:%d," , damage_roll , dice_roll , attacker->bonus_attack , target->bonus_defense);
 	if( damage_roll < 0 ) {
 		damage_roll = 0;
 	}
 	target->hp_current -= damage_roll;
-	printf( "hp:%d)\n" , target->hp_current );
+	printf( "h:%d)\n" , target->hp_current );
 	if(target->hp_current < 0 ) {
 		return result_attack_dead;
 	}
@@ -284,20 +284,36 @@ combat_perform_combat(
 	enum result_attack result;
 	bool died_0 = false;
 	bool died_1 = false;
-	printf( "  Combat started, max rounds: %d\n" , rounds);
+	printf( "  Combat started, (a:%d,d:%d,h:%d) vs (a:%d,d:%d,h:%d), max rounds: %d\n"
+			,ent_0->bonus_attack
+			,ent_0->bonus_defense
+			,ent_0->hp_current
+			,ent_1->bonus_attack
+			,ent_1->bonus_defense
+			,ent_1->hp_current
+			,rounds);
 	for(r = 0; r < rounds; ++r) {
-		printf( "ent_0  " );
+		printf( "Round%d, (a:%d,d:%d,h:%d) vs (a:%d,d:%d,h:%d)\n"
+				,r 
+				,ent_0->bonus_attack
+				,ent_0->bonus_defense
+				,ent_0->hp_current
+				,ent_1->bonus_attack
+				,ent_1->bonus_defense
+				,ent_1->hp_current );
+		printf( "e0 " );
 		result = combat_perform_attack( ent_0 , ent_1 );
 		if(result == result_attack_dead ) {
 			died_0 = true;
 			goto jump_end_combat;
 		}
-		printf( "ent_1  " );
+		printf( "e1 " );
 		result = combat_perform_attack( ent_1 , ent_0 );
 		if(result == result_attack_dead ) {
 			died_1 = true;
 			goto jump_end_combat;
 		}
+		printf("\n");
 	}
 
 jump_end_combat:
@@ -322,7 +338,9 @@ print_combat_result(
 		,const char * const str_ent_0
 		,const char * const str_ent_1 )
 {
-	printf("  Result of battle between \"%s\" and \"%s\":\n" , str_ent_0 , str_ent_1 );
+	printf("  Result of battle between \"%s\" and \"%s\":\n"
+			, str_ent_0
+			, str_ent_1 );
 	switch(result) {
 		case result_combat_draw:
 			printf( "Draw\n" );
@@ -345,7 +363,7 @@ int get_exp_reward(
 		 int const level_player
 		,int const level_foe )
 {
-	int const reward = ( level_foe - level_player );
+	int const reward = (level_foe - level_player );
 	if( reward > 0 ) {
 		return reward;
 	}
@@ -483,25 +501,43 @@ int main(int argc , char * argv[])
 			printf("you need at least 1 hp to fight(you have %d hp)\n" , state.player.hp_current );
 		} else {
 			const int enemy_level = 1 + state.player.level;
+			const int number_of_rounds = 3 + state.player.level;
 			CombatEntity foe = CombatEntity(enemy_level); /* generate worthy opponent, that is opponent with level equal to player */
-			printf("starting combat with level %d foe. (4 rounds).\n" , enemy_level);
-			enum result_combat result = combat_perform_combat( &(state.player) , &foe , 4 );
+			printf("starting combat with level %d foe. (%d rounds).\n"
+					, enemy_level
+					, number_of_rounds);
+			enum result_combat result
+				= combat_perform_combat(
+					 &(state.player)
+					,&foe
+					,number_of_rounds );
 			print_combat_result( result , "you" , "foe" );
 			if( state.player.hp_current < 0 ) { // player died
 				handle_player_death(&state);
 			} else {
-				printf( "You survived, with %d hp left.\n" , state.player.hp_current);
+				printf( "You survived, with %d hp left.\n"
+						, state.player.hp_current );
 			}
 			if( result == result_combat_winner_0 ) {
-				int const reward = get_exp_reward(state.player.level , enemy_level);
-				printf( "For your victory, you gain reward of %d\n" , reward );
+				int const reward = get_exp_reward(
+						state.player.level
+						, enemy_level);
+				printf( "For your victory, you gain reward of %d\n"
+						, reward );
 				state.player_data.progres_level += reward;
 				/* try to level up */
-				int const required_exp = get_required_progres_for_next_level(state.player.level);
-				if( required_exp <= state.player_data.progres_level ) {
+				int const required_exp
+					= get_required_progres_for_next_level(
+							state.player.level );
+				if( required_exp
+						<=
+						state.player_data.progres_level
+					) {
 					++(state.player.level);
-					state.player_data.progres_level -= required_exp;
-					printf( "You leveled up to level %d!\n" , state.player.level );
+					state.player_data.progres_level
+						-= required_exp;
+					printf( "You leveled up to level %d!\n"
+							, state.player.level );
 				}
 			}
 		}
