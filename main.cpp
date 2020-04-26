@@ -378,9 +378,11 @@ gamestate_heal(gamestate * gs) {
 
 /* UI */
 void
-print_message_death()
+handle_player_death(gamestate * state)
 {
-	printf( "You died. Don't worry though, this isn't a permadeath game, so you will only have to pay money to be healed. Run the game with argument '-r'\n" );
+	printf( "You died, because your life fell below 0. Don't worry though, this isn't a permadeath game, so you only lost some money for getting 'resurrected'.\nYou will have to pay money to be healed before your next fight.\nTo restore health, run the game with argument '-r'.\n" );
+	state->player_data.money += (state.player.hp_current * HEALING_COST_PER_HP); /* penalty for death. Yes, player can go into negative money! */
+	state->player.hp_current = 0;
 }
 
 
@@ -474,8 +476,8 @@ int main(int argc , char * argv[])
 			printf("starting combat with level 1 foe. (4 rounds).\n");
 			enum result_combat result = combat_perform_combat( &(state.player) , &foe , 4 );
 			print_combat_result( result , "you" , "foe" );
-			if( state.player.hp_current < 1 ) {
-				print_message_death();
+			if( state.player.hp_current < 0 ) { // player died
+				handle_player_death(&state);
 			} else {
 				printf( "You survived, with %d hp left.\n" , state.player.hp_current);
 			}
