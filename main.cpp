@@ -1,23 +1,12 @@
-#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
-#include <vector>
 #include <time.h>
 #include <string.h>
 
 
-const char * STRING_FILENAME_SAVE = "0.save";
-
-const int SECONDS_PER_TICK = 1;
-const int INCOME_TICKS_PER_TIMEUNIT = 0xf;
-const int INCOME_PER_TICK  = 1;
-
-
-// const int seconds_max_per_seesion = (32 * 60 * 60);
-
-int const HEALING_COST_PER_HP = 0x4;
+#include "config.h"
 
 
 struct CombatEntity {
