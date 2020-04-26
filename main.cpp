@@ -10,8 +10,10 @@
 
 const char * STRING_FILENAME_SAVE = "0.save";
 
-const int seconds_per_tick = 1;
-const int income_per_tick  = 1;
+const int SECONDS_PER_TICK = 1;
+const int INCOME_TICKS_PER_TIMEUNIT = 0x4;
+const int INCOME_PER_TICK  = 1;
+
 
 // const int seconds_max_per_seesion = (32 * 60 * 60);
 
@@ -50,7 +52,7 @@ CombatEntity::CombatEntity() {
 
 struct PlayerData {
 	int money;
-	int progres_time;
+	int progres_income;
 	int progres_level;
 
 	PlayerData();
@@ -59,7 +61,7 @@ struct PlayerData {
 
 PlayerData::PlayerData() {
 	money = 0;
-	progres_time = 0;
+	progres_income = 0;
 	progres_level = 0;
 }
 
@@ -92,7 +94,7 @@ void print_gamestate( const struct gamestate gs)
 	// printf("gs.time_game_created	%lu\n" , gs.time_game_created    );
 	// printf("gs.time_last_saved	%lu\n" , gs.time_last_saved      );
 	printf("Money 	 %d\n" , gs.player_data.money         );
-	//printf("gs.player_data.progres_time	%d\n" , gs.player_data.progres_time  );
+	//printf("gs.player_data.progres_income	%d\n" , gs.player_data.progres_income  );
 	printf("Level:%d (progress:%d)\n"
 			, gs.player.level
 			, gs.player_data.progres_level       );
@@ -104,10 +106,8 @@ void print_gamestate( const struct gamestate gs)
 
 int calculate_elapsed_ticks(time_t const time_before , time_t const time_now)
 {
-	return (time_now - time_before) / seconds_per_tick;;
+	return (time_now - time_before) / SECONDS_PER_TICK;;
 }
-
-
 
 
 void
@@ -122,7 +122,7 @@ write_savefile(
 	fprintf( savefile ,  "%lu\n" , gs->time_game_created );
 	fprintf( savefile ,  "%lu\n" , gs->time_last_saved );
 	fprintf( savefile ,  "%d\n"  , gs->player_data.money);
-	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_time);
+	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_income);
 	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_level);
 	fprintf( savefile ,  "%d\n"  , gs->player.level);
 	fprintf( savefile ,  "%d\n"  , gs->player.hp_current);
@@ -154,7 +154,7 @@ struct gamestate read_savefile(const char * const filename )
 	fscanf( savefile ,  "%lu\n" , &(gs.time_game_created ));
 	fscanf( savefile ,  "%lu\n" , &(gs.time_last_saved ));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.money));
-	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_time));
+	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_income));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_level));
 	fscanf( savefile ,  "%d\n"  , &(gs.player.level));
 	fscanf( savefile ,  "%d\n"  , &(gs.player.hp_current));
@@ -441,10 +441,13 @@ int main(int argc , char * argv[])
 	int elapsed = calculate_elapsed_ticks(state.time_last_saved , gametime);
 	printf("elapsed	%d\n" , elapsed );
 
-	int income = elapsed * income_per_tick;
-	printf("income	%d\n" , income );
+	int const income_progres_old = state.player_data.progres_income + elapsed;
+	int const income = (income_progres_old / INCOME_TICKS_PER_TIMEUNIT) * INCOME_PER_TICK;
+	int const income_progres = income_progres_old % INCOME_TICKS_PER_TIMEUNIT;
+	printf("income	%d(progres:%d)\n" , income, income_progres );
 
 	state.player_data.money += income;
+	state.player_data.progres_income = income_progres;
 
 
 
