@@ -23,7 +23,7 @@ struct CombatEntity {
 
 CombatEntity::CombatEntity(int const _level) {
 	level = _level;
-	int const hp = _level * 4;
+	int const hp = 8 + _level * 2;
 	hp_current = hp;
 	hp_max = hp;
 	bonus_attack =  _level;
@@ -89,9 +89,10 @@ void print_gamestate( const struct gamestate gs)
 	// printf("gs.time_last_saved	%lu\n" , gs.time_last_saved      );
 	printf("Money 	 %d\n" , gs.player_data.money         );
 	//printf("gs.player_data.progres_income	%d\n" , gs.player_data.progres_income  );
-	printf("Level	%d (progress:%d)\n"
+	printf("Level	%d (progress:%d/%d)\n"
 			, gs.player.level
-			, gs.player_data.progres_level       );
+			, gs.player_data.progres_level
+			, get_required_progres_for_next_level(gs.player.level) );
 	printf("HP	%d (max:%d)\n"  , gs.player.hp_current , gs.player.hp_max );
 	printf("ATK	%d\n"  , gs.player.bonus_attack  );
 	printf("DEF	%d\n"  , gs.player.bonus_defense );
@@ -110,7 +111,6 @@ write_savefile(
 	, const struct gamestate * gs )
 {
 	FILE * savefile = fopen(filename , "w");
-	printf( "opened '%s'" , filename  );
 	assert(savefile);
 
 	fprintf( savefile ,  "%lu\n" , gs->time_game_created );
@@ -124,6 +124,7 @@ write_savefile(
 	fprintf( savefile ,  "%d\n"  , gs->player.bonus_defense);
 
 	fclose(savefile);
+	printf( "saved to '%s'\n" , filename  );
 }
 
 void
@@ -247,11 +248,12 @@ combat_perform_attack(
 		) {
 	int dice_roll = roll_d6();
 	int damage_roll = dice_roll + attacker->bonus_attack + (-target->bonus_defense) ;
-	printf( "damage_roll:%d(diceroll:%d, atk:%d , def:%d)\n" , damage_roll , dice_roll , attacker->bonus_attack , target->bonus_defense);
+	printf( "damage_roll:%d(diceroll:%d, atk:%d , def:%d , " , damage_roll , dice_roll , attacker->bonus_attack , target->bonus_defense);
 	if( damage_roll < 0 ) {
 		damage_roll = 0;
 	}
 	target->hp_current -= damage_roll;
+	printf( "hp:%d)\n" , target->hp_current );
 	if(target->hp_current < 0 ) {
 		return result_attack_dead;
 	}
@@ -480,8 +482,9 @@ int main(int argc , char * argv[])
 		if( state.player.hp_current < 1 ) {
 			printf("you need at least 1 hp to fight(you have %d hp)\n" , state.player.hp_current );
 		} else {
-			CombatEntity foe = CombatEntity(1);
-			printf("starting combat with level 1 foe. (4 rounds).\n");
+			const int enemy_level = 1 + state.player.level;
+			CombatEntity foe = CombatEntity(enemy_level); /* generate worthy opponent, that is opponent with level equal to player */
+			printf("starting combat with level %d foe. (4 rounds).\n" , enemy_level);
 			enum result_combat result = combat_perform_combat( &(state.player) , &foe , 4 );
 			print_combat_result( result , "you" , "foe" );
 			if( state.player.hp_current < 0 ) { // player died
@@ -490,7 +493,7 @@ int main(int argc , char * argv[])
 				printf( "You survived, with %d hp left.\n" , state.player.hp_current);
 			}
 			if( result == result_combat_winner_0 ) {
-				int const reward = get_exp_reward(state.player.level , 1);
+				int const reward = get_exp_reward(state.player.level , enemy_level);
 				printf( "For your victory, you gain reward of %d\n" , reward );
 				state.player_data.progres_level += reward;
 				/* try to level up */
