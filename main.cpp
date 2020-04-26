@@ -11,7 +11,7 @@
 const char * STRING_FILENAME_SAVE = "0.save";
 
 const int SECONDS_PER_TICK = 1;
-const int INCOME_TICKS_PER_TIMEUNIT = 0x10;
+const int INCOME_TICKS_PER_TIMEUNIT = 0xf;
 const int INCOME_PER_TICK  = 1;
 
 
@@ -65,6 +65,11 @@ PlayerData::PlayerData() {
 	progres_level = 0;
 }
 
+int
+get_required_progres_for_next_level(int const current_level) {
+	return (2 << current_level);
+}
+
 
 struct gamestate {
 	time_t time_game_created;
@@ -95,7 +100,7 @@ void print_gamestate( const struct gamestate gs)
 	// printf("gs.time_last_saved	%lu\n" , gs.time_last_saved      );
 	printf("Money 	 %d\n" , gs.player_data.money         );
 	//printf("gs.player_data.progres_income	%d\n" , gs.player_data.progres_income  );
-	printf("Level:%d (progress:%d)\n"
+	printf("Level	%d (progress:%d)\n"
 			, gs.player.level
 			, gs.player_data.progres_level       );
 	printf("HP	%d (max:%d)\n"  , gs.player.hp_current , gs.player.hp_max );
@@ -499,6 +504,13 @@ int main(int argc , char * argv[])
 				int const reward = get_exp_reward(state.player.level , 1);
 				printf( "For your victory, you gain reward of %d\n" , reward );
 				state.player_data.progres_level += reward;
+				/* try to level up */
+				int const required_exp = get_required_progres_for_next_level(state.player.level);
+				if( required_exp <= state.player_data.progres_level ) {
+					++(state.player.level);
+					state.player_data.progres_level -= required_exp;
+					printf( "You leveled up to level %d!\n" , state.player.level );
+				}
 			}
 		}
 	}
