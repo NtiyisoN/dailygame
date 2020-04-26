@@ -236,7 +236,7 @@ player_upgrade_defense(
 
 int
 roll_d6() {
-	return rand() % 4;
+	return rand() % 6;
 }
 
 
