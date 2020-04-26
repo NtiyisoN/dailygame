@@ -7,14 +7,6 @@ Needs `g++` to compile.
 
 
 
-Goals for version "0.2":
-1. ✓You can upgrade character stats by spending gold.
-2. ✓You can fight(rudimentary combat system).
-3. ✓You can restore HP.
-4. ✓You can level up (at this point, the leveling won't really add anything, it will only mean the player has to fight harder foes to gain higher levels. Woohoo number go up!).
-5. ✓You can (and have to) fight fight progressively harder foes with better rewards.
-
-
 Goals for version "0.3":
 1.  (progress) You need to get higher levels in order to improve your stats.
 2.  (progress) You can upgrade your health.
