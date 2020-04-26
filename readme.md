@@ -43,3 +43,4 @@ Unimportant gimmicks, do it eventually(maybe even never):
 2. "Combat" - add complexity to it
 3. "RPG" - more player character stats
 4. "name" - add ability to name your character
+5. penalty for dying
