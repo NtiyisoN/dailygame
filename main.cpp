@@ -366,6 +366,11 @@ gamestate_heal(gamestate * gs) {
 		printf("didn't heal. hp not lower than max.\n");
 		return;
 	}
+	if( gs->player.hp_current < 0 ) {
+		printf( "BUG! hp is lower than 0. didn't heal.\n" );
+		return;
+	}
+
 	int const hp_difference = ( gs->player.hp_max  + (- gs->player.hp_current)  );
 	int const cost = hp_difference * HEALING_COST_PER_HP;
 	gs->player_data.money -= cost;
@@ -381,7 +386,7 @@ void
 handle_player_death(gamestate * state)
 {
 	printf( "You died, because your life fell below 0. Don't worry though, this isn't a permadeath game, so you only lost some money for getting 'resurrected'.\nYou will have to pay money to be healed before your next fight.\nTo restore health, run the game with argument '-r'.\n" );
-	state->player_data.money += (state.player.hp_current * HEALING_COST_PER_HP); /* penalty for death. Yes, player can go into negative money! */
+	state->player_data.money += (state->player.hp_current * HEALING_COST_PER_HP); /* penalty for death. Yes, player can go into negative money! */
 	state->player.hp_current = 0;
 }
 
