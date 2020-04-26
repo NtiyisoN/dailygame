@@ -361,7 +361,7 @@ int get_exp_reward(
 
 void
 gamestate_heal(gamestate * gs) {
-	printf( "Healing...  " );
+	printf( "Healing(money_per_hp:%d)...  " , HEALING_COST_PER_HP );
 	if( gs->player.hp_current >= gs->player.hp_max ) {
 		printf("didn't heal. hp not lower than max.\n");
 		return;
@@ -370,11 +370,20 @@ gamestate_heal(gamestate * gs) {
 		printf( "BUG! hp is lower than 0. didn't heal.\n" );
 		return;
 	}
+	if( gs->player_data.money < HEALING_COST_PER_HP ) {
+		printf( "didn't heal. You don't have enough money to heal even one hp!\n" );
+		return;
+	}
 
-	int const hp_difference = ( gs->player.hp_max  + (- gs->player.hp_current)  );
-	int const cost = hp_difference * HEALING_COST_PER_HP;
+	int hp_difference = ( gs->player.hp_max  + (- gs->player.hp_current)  );
+	int cost = hp_difference * HEALING_COST_PER_HP;
+	if( cost > gs->player_data.money ) {
+		/* don't allow getting into negative money */
+		hp_difference = gs->player_data.money / HEALING_COST_PER_HP;
+		cost = hp_difference * HEALING_COST_PER_HP;
+	}
 	gs->player_data.money -= cost;
-	gs->player.hp_current = gs->player.hp_max;
+	gs->player.hp_current += hp_difference;
 	printf("Healed hp:%d, spent money:%d, current money:%d\n" , hp_difference , cost , gs->player_data.money);
 }
 
