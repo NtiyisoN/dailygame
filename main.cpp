@@ -33,19 +33,19 @@ struct CombatEntity {
 
 
 CombatEntity::CombatEntity(int const _level) {
-	int hp = _level * 4;
 	level = _level;
+	int const hp = _level * 4;
 	hp_current = hp;
 	hp_max = hp;
-	bonus_attack = _level;
-	bonus_defense = _level;
+	bonus_attack =  2 * _level;
+	bonus_defense = 2 * _level;
 }
 
 CombatEntity::CombatEntity() {
 	hp_current = 0x10;
 	hp_max     = 0x10;
-	bonus_attack  = 1;
-	bonus_defense = 1;
+	bonus_attack  = 0;
+	bonus_defense = 0;
 }
 
 
