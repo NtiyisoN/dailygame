@@ -29,3 +29,5 @@ Unimportant gimmicks, do it eventually(maybe even never):
 3. "RPG" - more player character stats
 4. "name" - add ability to name your character
 5. penalty for dying
+6. interface: ncurses
+7. interface: stdin
