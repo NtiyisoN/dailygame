@@ -31,8 +31,8 @@ CombatEntity::CombatEntity(int const _level) {
 }
 
 CombatEntity::CombatEntity() {
-	hp_current = 0x10;
-	hp_max     = 0x10;
+	hp_current = DEFAULT_MAX_HEALTH;
+	hp_max     = DEFAULT_MAX_HEALTH;
 	bonus_attack  = 0;
 	bonus_defense = 0;
 }
@@ -120,6 +120,7 @@ write_savefile(
 	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_level);
 	fprintf( savefile ,  "%d\n"  , gs->player.level);
 	fprintf( savefile ,  "%d\n"  , gs->player.hp_current);
+	fprintf( savefile ,  "%d\n"  , gs->player.hp_max);
 	fprintf( savefile ,  "%d\n"  , gs->player.bonus_attack);
 	fprintf( savefile ,  "%d\n"  , gs->player.bonus_defense);
 
@@ -153,6 +154,7 @@ struct gamestate read_savefile(const char * const filename )
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_level));
 	fscanf( savefile ,  "%d\n"  , &(gs.player.level));
 	fscanf( savefile ,  "%d\n"  , &(gs.player.hp_current));
+	fscanf( savefile ,  "%d\n"  , &(gs.player.hp_max));
 	fscanf( savefile ,  "%d\n"  , &(gs.player.bonus_attack));
 	fscanf( savefile ,  "%d\n"  , &(gs.player.bonus_defense));
 
@@ -193,7 +195,26 @@ int
 get_upgrade_cost(
 		int const desired_level
 ) {
-	return ( 4 << (desired_level));
+	return ( 1 << (desired_level));
+}
+
+int
+get_upgrade_cost_health(
+		int desired_health
+) {
+	if( desired_health <= DEFAULT_MAX_HEALTH ) {
+		return 1;
+	} else {
+		return ( 1 << (desired_health - DEFAULT_MAX_HEALTH));
+	}
+}
+
+int
+get_max_upgrade_health(
+		int const level
+) {
+	return DEFAULT_MAX_HEALTH
+		+ ( level * MAX_HEALTH_UPGRADE_PER_LEVEL ) ;
 }
 
 
@@ -231,6 +252,27 @@ player_upgrade_defense(
 		printf("Upgraded defense to level:%d. Cost:%d\n" , gs->player.bonus_defense , upgrade_cost);
 	} else {
 		printf("insufficient funds to upgrade defense to level %d; need:%d , have:%d\n" , gs->player.bonus_defense , upgrade_cost , gs->player_data.money );
+	}
+}
+
+
+void
+player_upgrade_health(
+		struct gamestate * gs
+) {
+	if( gs->player.hp_max >= (get_max_upgrade_health(gs->player.level))  ) {
+		printf( "You cannot upgrade health anymore, you need to level up.\n" );
+		return;
+	}
+	int const upgrade_cost = get_upgrade_cost_health(1 + (gs->player.hp_max));
+	if( gs->player_data.money > upgrade_cost ) {
+		gs->player_data.money -= upgrade_cost;
+		(++(gs->player.hp_max));
+		printf("Upgraded hp_max to:%d. Cost:%d\n" , gs->player.hp_max , upgrade_cost);
+	} else {
+		printf("insufficient funds to upgrade health; need:%d , have:%d\n"
+				, upgrade_cost
+				, gs->player_data.money );
 	}
 }
 
@@ -428,6 +470,7 @@ void print_cli_help() {
 	printf("-h	print help\n");
 	printf("-a	upgrade attack\n");
 	printf("-d	upgrade defense\n");
+	printf("-l	upgrade health\n");
 	printf("-f	fight\n");
 	printf("-r	restore hp, you will go into zero-interest debt(negative money)\n");
 	// printf("-H	heal one hp\n");
@@ -441,6 +484,7 @@ int main(int argc , char * argv[])
 	bool flag_heal = false;
 	bool flag_upgrade_attack = false;
 	bool flag_upgrade_defense = false;
+	bool flag_upgrade_health = false;
 	bool flag_action_combat = false;
 
 	for(int i = 1; i < argc; ++i) {
@@ -451,6 +495,8 @@ int main(int argc , char * argv[])
 			flag_upgrade_attack = true;
 		} else if( 0 == strcmp(argv[i] , "-d") ) {
 			flag_upgrade_defense = true;
+		} else if( 0 == strcmp(argv[i] , "-l") ) {
+			flag_upgrade_health = true;
 		} else if( 0 == strcmp(argv[i] , "-f") ) {
 			flag_action_combat = true;
 		} else if( 0 == strcmp(argv[i] , "-r") ) {
@@ -497,6 +543,10 @@ int main(int argc , char * argv[])
 	if(flag_upgrade_defense) {
 		printf("upgrading defense\n");
 		player_upgrade_defense(&state);
+	}
+	if(flag_upgrade_health) {
+		printf("upgrading health\n");
+		player_upgrade_health(&state);
 	}
 
 	if(flag_heal) {
