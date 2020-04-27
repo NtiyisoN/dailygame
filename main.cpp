@@ -38,6 +38,14 @@ CombatEntity::CombatEntity() {
 }
 
 
+CombatEntity
+create_enemy( int const difficulty_level ) {
+	CombatEntity enemy = CombatEntity( difficulty_level );
+	enemy.bonus_attack  += MONSTER_ATK_BASE;
+	enemy.bonus_defense += MONSTER_DEF_BASE;
+	return enemy;
+}
+
 
 struct PlayerData {
 	int money;
@@ -558,7 +566,7 @@ int main(int argc , char * argv[])
 		} else {
 			const int enemy_level = 1 + state.player.level;
 			const int number_of_rounds = 3 + state.player.level;
-			CombatEntity foe = CombatEntity(enemy_level); /* generate worthy opponent, that is opponent with level equal to player */
+			CombatEntity foe = create_enemy(enemy_level); /* generate worthy opponent, that is opponent with level equal to player */
 			printf("starting combat with level %d foe. (%d rounds).\n"
 					, enemy_level
 					, number_of_rounds);
