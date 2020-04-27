@@ -173,11 +173,6 @@ void create_new_savefile(const char * const filename , time_t const time_game_cr
 }
 
 
-//enum savefile_state {
-//	savefile_state_
-//	savefile_state_
-//	savefile_state_
-//};
 
 bool does_savefile_exist(const char * const filename) {
 	if( access( filename , F_OK ) != -1 ) {
@@ -473,7 +468,6 @@ void print_cli_help() {
 	printf("-l	upgrade health\n");
 	printf("-f	fight\n");
 	printf("-r	restore hp, you will go into zero-interest debt(negative money)\n");
-	// printf("-H	heal one hp\n");
 }
 
 
