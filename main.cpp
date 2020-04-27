@@ -548,6 +548,8 @@ int main(int argc , char * argv[])
 	bool flag_upgrade_health  = false;
 	bool flag_upgrade_income  = false;
 	bool flag_action_combat = false;
+	bool flag_player_chose_enemy_level = false;
+	int chosen_enemy_level = 0;
 
 	for(int i = 1; i < argc; ++i) {
 		// TODO
@@ -561,8 +563,15 @@ int main(int argc , char * argv[])
 			flag_upgrade_health = true;
 		} else if( 0 == strcmp(argv[i] , "-i") ) {
 			flag_upgrade_income = true;
-		} else if( 0 == strcmp(argv[i] , "-f") ) {
+		} else if( 0 == strncmp(argv[i] , "-f" , 2) ) {
 			flag_action_combat = true;
+			if( *(argv[i] + 2) != '\0' ) {
+				flag_player_chose_enemy_level = true;
+				sscanf( (argv[i] + 2)
+						, "%d"
+						, &chosen_enemy_level);
+				printf("player chose enemy level %d\n" , chosen_enemy_level);
+			}
 		} else if( 0 == strcmp(argv[i] , "-r") ) {
 			flag_heal = true;
 		} else {
@@ -625,7 +634,10 @@ int main(int argc , char * argv[])
 		if( state.player.hp_current < 1 ) {
 			printf("you need at least 1 hp to fight(you have %d hp)\n" , state.player.hp_current );
 		} else {
-			const int enemy_level = 1 + state.player.level;
+			const int enemy_level
+				= flag_player_chose_enemy_level
+				? chosen_enemy_level
+				: (1 + state.player.level) ;
 			const int number_of_rounds = 3 + state.player.level;
 			CombatEntity foe = create_enemy(enemy_level); /* generate worthy opponent, that is opponent with level equal to player */
 			printf("starting combat with level %d foe. (%d rounds).\n"
