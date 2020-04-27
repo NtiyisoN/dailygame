@@ -9,3 +9,5 @@ const int MONSTER_HP_BASE = 0x4;
 const int MONSTER_HP_PER_LEVEL = 0x2;
 const int MONSTER_ATK_BASE = (-0x1);
 const int MONSTER_DEF_BASE = (-0x1);
+const int UPGRADE_INCOME_LEVEL_DISTANCE = 0x2;
+const int DEFAULT_INCOME = 0x1;

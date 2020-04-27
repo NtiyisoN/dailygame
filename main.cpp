@@ -51,6 +51,7 @@ struct PlayerData {
 	int money;
 	int progres_income;
 	int progres_level;
+	int income;
 
 	PlayerData();
 };
@@ -58,6 +59,7 @@ struct PlayerData {
 
 PlayerData::PlayerData() {
 	money = 0;
+	income = DEFAULT_INCOME;
 	progres_income = 0;
 	progres_level = 0;
 }
@@ -95,7 +97,9 @@ void print_gamestate( const struct gamestate gs)
 {
 	// printf("gs.time_game_created	%lu\n" , gs.time_game_created    );
 	// printf("gs.time_last_saved	%lu\n" , gs.time_last_saved      );
-	printf("Money 	 %d\n" , gs.player_data.money         );
+	printf("Money(income) 	 %d(%d)\n"
+			, gs.player_data.money
+			, gs.player_data.income );
 	//printf("gs.player_data.progres_income	%d\n" , gs.player_data.progres_income  );
 	printf("Level	%d (progress:%d/%d)\n"
 			, gs.player.level
@@ -124,6 +128,7 @@ write_savefile(
 	fprintf( savefile ,  "%lu\n" , gs->time_game_created );
 	fprintf( savefile ,  "%lu\n" , gs->time_last_saved );
 	fprintf( savefile ,  "%d\n"  , gs->player_data.money);
+	fprintf( savefile ,  "%d\n"  , gs->player_data.income);
 	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_income);
 	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_level);
 	fprintf( savefile ,  "%d\n"  , gs->player.level);
@@ -158,6 +163,7 @@ struct gamestate read_savefile(const char * const filename )
 	fscanf( savefile ,  "%lu\n" , &(gs.time_game_created ));
 	fscanf( savefile ,  "%lu\n" , &(gs.time_last_saved ));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.money));
+	fscanf( savefile ,  "%d\n"  , &(gs.player_data.income));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_income));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_level));
 	fscanf( savefile ,  "%d\n"  , &(gs.player.level));
@@ -212,6 +218,8 @@ get_upgrade_cost_health(
 	}
 }
 
+
+
 int
 get_max_upgrade_health(
 		int const level
@@ -219,6 +227,52 @@ get_max_upgrade_health(
 	return DEFAULT_MAX_HEALTH
 		+ ( level * MAX_HEALTH_UPGRADE_PER_LEVEL ) ;
 }
+
+
+int
+get_upgrade_cost_income(
+		int const current_income
+) {
+	return ( 0x10 << current_income );
+	
+}
+
+
+int
+get_max_upgrade_income(
+		int const level
+) {
+	return DEFAULT_INCOME
+		+ ( level / UPGRADE_INCOME_LEVEL_DISTANCE ) ;
+}
+
+
+void
+player_upgrade_income(
+		struct gamestate * gs
+) {
+
+	int const max_income = get_max_upgrade_income(gs->player.level);
+	if( gs->player_data.income >= max_income ) {
+		printf( "You cannot upgrade income anymore.\n" );
+		return;
+	}
+
+	int const upgrade_cost = get_upgrade_cost_income(gs->player_data.income);
+	if( gs->player_data.money > upgrade_cost ) {
+		gs->player_data.money -= upgrade_cost;
+		(++(gs->player_data.income));
+		printf("Upgraded income to level:%d. Cost:%d\n"
+				, gs->player_data.income
+				, upgrade_cost);
+	} else {
+		printf("insufficient funds to upgrade income to level %d; need:%d , have:%d\n"
+				, gs->player_data.income
+				, upgrade_cost
+				, gs->player_data.money );
+	}
+}
+
 
 
 void
@@ -478,6 +532,7 @@ void print_cli_help() {
 	printf("-a	upgrade attack\n");
 	printf("-d	upgrade defense\n");
 	printf("-l	upgrade health\n");
+	printf("-i	upgrade income\n");
 	printf("-f	fight\n");
 	printf("-r	restore hp, you will go into zero-interest debt(negative money)\n");
 }
@@ -488,9 +543,10 @@ void print_cli_help() {
 int main(int argc , char * argv[])
 {
 	bool flag_heal = false;
-	bool flag_upgrade_attack = false;
+	bool flag_upgrade_attack  = false;
 	bool flag_upgrade_defense = false;
-	bool flag_upgrade_health = false;
+	bool flag_upgrade_health  = false;
+	bool flag_upgrade_income  = false;
 	bool flag_action_combat = false;
 
 	for(int i = 1; i < argc; ++i) {
@@ -503,6 +559,8 @@ int main(int argc , char * argv[])
 			flag_upgrade_defense = true;
 		} else if( 0 == strcmp(argv[i] , "-l") ) {
 			flag_upgrade_health = true;
+		} else if( 0 == strcmp(argv[i] , "-i") ) {
+			flag_upgrade_income = true;
 		} else if( 0 == strcmp(argv[i] , "-f") ) {
 			flag_action_combat = true;
 		} else if( 0 == strcmp(argv[i] , "-r") ) {
@@ -536,9 +594,8 @@ int main(int argc , char * argv[])
 	int const income_progres = income_progres_old % INCOME_TICKS_PER_TIMEUNIT;
 	printf("income	%d(progres:%d)\n" , income, income_progres );
 
-	state.player_data.money += income;
+	state.player_data.money += state.player_data.income;
 	state.player_data.progres_income = income_progres;
-
 
 
 	if(flag_upgrade_attack) {
@@ -553,6 +610,10 @@ int main(int argc , char * argv[])
 	if(flag_upgrade_health) {
 		printf("upgrading health\n");
 		player_upgrade_health(&state);
+	}
+	if(flag_upgrade_income) {
+		printf("upgrading income\n");
+		player_upgrade_income(&state);
 	}
 
 	if(flag_heal) {
