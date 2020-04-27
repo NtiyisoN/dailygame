@@ -1,10 +1,3 @@
-Goals for version "0.3":
-1. ✓(progress) You need to get higher levels in order to improve your stats.
-2. ✓(progress) You can upgrade your health.
-3. ✓(progress) You can upgrade your income. (remember to save the player's income in savefile)
-4. ✓You can choose the level of foe which you want to fight against.
-
-
 Goals for version "0.4":
 1. (mmorpg-parody) Arbitrarily restrict the player from doing actions, so they can only do a few things per day. (Stamina?)
 2. (mmorpg-parody) Arbitrarily demand to wait some time when upgrading anything. (maybe this should be optional? or some funny mechanic, in which you can spend money to hasten the process)
