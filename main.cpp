@@ -200,7 +200,7 @@ get_upgrade_cost_health(
 	if( desired_health <= DEFAULT_MAX_HEALTH ) {
 		return 1;
 	} else {
-		return ( 1 << (desired_health - DEFAULT_MAX_HEALTH));
+		return ( 1 << ((desired_health - DEFAULT_MAX_HEALTH) / 2));
 	}
 }
 
@@ -329,7 +329,7 @@ combat_perform_combat(
 	enum result_attack result;
 	bool died_0 = false;
 	bool died_1 = false;
-	printf( "  Combat started, (a:%d,d:%d,h:%d) vs (a:%d,d:%d,h:%d), max rounds: %d\n"
+	 printf( "  Combat started, (a:%d,d:%d,h:%d) vs (a:%d,d:%d,h:%d), max rounds: %d\n"
 			,ent_0->bonus_attack
 			,ent_0->bonus_defense
 			,ent_0->hp_current
@@ -362,7 +362,11 @@ combat_perform_combat(
 	}
 
 jump_end_combat:
-	printf( "  Combat ended after %d rounds.(death? 0:%d,1:%d)" , r , died_0 , died_1 );
+	printf( "  Combat ended after %d rounds.(hp left: %d , %d )(death? 0:%d,1:%d)\n"
+			,r
+			,ent_0->hp_current
+			,ent_1->hp_current
+			,died_0 , died_1 );
 	if(  ( (!died_0) && (!died_1) )
 		 ||
 	     (died_0 && died_1) ) {
