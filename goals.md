@@ -10,6 +10,7 @@ Required for version "1.0":
 1.  Robust, flexible savefile: more database-like. maybe tab-separated key-value pairs, so that stuff can move around, be added etc.
 2.  Separation between "log"(mostly for debug) and "interface"(what the player should see)
 3.  Robust argument parsing: use POSIX `getopt(3POSIX)`, or GNU `getopt(3)` or `argp.h` from GNU lib C.
+4.  Better abstraction for upgrade system. Copying code makes for a big mess.
 
 When version "1.0" is functionally complete:
 
