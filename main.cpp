@@ -23,7 +23,7 @@ struct CombatEntity {
 
 CombatEntity::CombatEntity(int const _level) {
 	level = _level;
-	int const hp = 2 + _level * 2;
+	int const hp = MONSTER_HP_BASE + (_level * MONSTER_HP_PER_LEVEL);
 	hp_current = hp;
 	hp_max = hp;
 	bonus_attack =  _level;
@@ -188,9 +188,9 @@ bool does_savefile_exist(const char * const filename) {
 /* GAME */
 int
 get_upgrade_cost(
-		int const desired_level
+		int const current_level
 ) {
-	return ( 1 << (desired_level));
+	return ( 1 << (current_level));
 }
 
 int
@@ -217,11 +217,11 @@ void
 player_upgrade_attack(
 		struct gamestate * gs
 ) {
-	if( gs->player.level >= gs->player.bonus_attack ) {
-		printf( "You cannot upgrade attack above your character level!\n" );
+	if( gs->player.bonus_attack >= gs->player.level ) {
+		printf( "You cannot upgrade attack anymore. Fight something to gain level.\n" );
 		return;
 	}
-	int const upgrade_cost = get_upgrade_cost(1 + (gs->player.bonus_attack));
+	int const upgrade_cost = get_upgrade_cost(gs->player.bonus_attack);
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
 		(++(gs->player.bonus_attack));
@@ -236,11 +236,11 @@ void
 player_upgrade_defense(
 		struct gamestate * gs
 ) {
-	if( gs->player.level >= gs->player.bonus_defense ) {
-		printf( "You cannot upgrade defense above your character level!\n" );
+	if( gs->player.bonus_defense >= gs->player.level  ) {
+		printf( "You cannot upgrade defense anymore. Fight something to gain level.\n" );
 		return;
 	}
-	int const upgrade_cost = get_upgrade_cost(1 + (gs->player.bonus_defense));
+	int const upgrade_cost = get_upgrade_cost(gs->player.bonus_defense);
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
 		(++(gs->player.bonus_defense));
