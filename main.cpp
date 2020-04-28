@@ -52,6 +52,7 @@ struct PlayerData {
 	int progres_income;
 	int progres_level;
 	int income;
+	int vault;
 
 	PlayerData();
 };
@@ -62,13 +63,19 @@ PlayerData::PlayerData() {
 	income = DEFAULT_INCOME;
 	progres_income = 0;
 	progres_level = 0;
+	vault = 0;
 }
 
 int
 get_required_progres_for_next_level(int const current_level) {
-	return (2 << current_level);
+	return (2 << (current_level/2));
 }
 
+
+int
+get_vault_capacity(int const vault_level) {
+	return (VAULT_CAPACITY_BASE << vault_level) ;
+}
 
 struct gamestate {
 	time_t time_game_created;
@@ -97,9 +104,11 @@ void print_gamestate( const struct gamestate gs)
 {
 	// printf("gs.time_game_created	%lu\n" , gs.time_game_created    );
 	// printf("gs.time_last_saved	%lu\n" , gs.time_last_saved      );
-	printf("Money(income) 	 %d(%d)\n"
+	printf("Money/Maxmoney(income|vault_level) 	 %d/%d(%d|%d)\n"
 			, gs.player_data.money
-			, gs.player_data.income );
+			, get_vault_capacity(gs.player_data.vault)
+			, gs.player_data.income
+			, gs.player_data.vault );
 	//printf("gs.player_data.progres_income	%d\n" , gs.player_data.progres_income  );
 	printf("Level	%d (progress:%d/%d)\n"
 			, gs.player.level
@@ -129,6 +138,7 @@ write_savefile(
 	fprintf( savefile ,  "%lu\n" , gs->time_last_saved );
 	fprintf( savefile ,  "%d\n"  , gs->player_data.money);
 	fprintf( savefile ,  "%d\n"  , gs->player_data.income);
+	fprintf( savefile ,  "%d\n"  , gs->player_data.vault);
 	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_income);
 	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_level);
 	fprintf( savefile ,  "%d\n"  , gs->player.level);
@@ -164,6 +174,7 @@ struct gamestate read_savefile(const char * const filename )
 	fscanf( savefile ,  "%lu\n" , &(gs.time_last_saved ));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.money));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.income));
+	fscanf( savefile ,  "%d\n"  , &(gs.player_data.vault));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_income));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_level));
 	fscanf( savefile ,  "%d\n"  , &(gs.player.level));
@@ -202,10 +213,11 @@ bool does_savefile_exist(const char * const filename) {
 /* GAME */
 
 enum upgrade_type {
-	 upgrade_type_income
-	,upgrade_type_attack
-	,upgrade_type_defense
-	,upgrade_type_hpmax
+	upgrade_type_attack ,
+	upgrade_type_defense ,
+	upgrade_type_hpmax ,
+	upgrade_type_income ,
+	upgrade_type_vault ,
 };
 
 int
@@ -215,10 +227,6 @@ get_upgrade_cost_generic(
 ) {
 	int upgrade_cost = 0;
 	switch(type) {
-		case upgrade_type_income:
-			upgrade_cost
-				= ( UPGRADE_INCOME_COST_BASE << stat_level );
-			break;
 		case upgrade_type_attack:
 		case upgrade_type_defense:
 			upgrade_cost
@@ -229,6 +237,14 @@ get_upgrade_cost_generic(
 				= stat_level <= DEFAULT_MAX_HEALTH
 				? 1
 				: 1 << ((stat_level - DEFAULT_MAX_HEALTH) / 4) ;
+			break;
+		case upgrade_type_income:
+			upgrade_cost
+				= ( UPGRADE_INCOME_COST_BASE << stat_level );
+			break;
+		case upgrade_type_vault:
+			upgrade_cost
+				= ( UPGRADE_VAULT_COST_BASE << stat_level );
 			break;
 		default:
 			printf("Unrecognized upgrade_type %d" , type);
@@ -243,17 +259,18 @@ get_upgrade_maxlevel_generic(
 		,int const player_level
 ) {
 	switch(type) {
-		case upgrade_type_income:
-			return
-				DEFAULT_INCOME
-				+ ( player_level / UPGRADE_INCOME_LEVEL_DISTANCE ) ;
 		case upgrade_type_attack:
 		case upgrade_type_defense:
+		case upgrade_type_vault: /* "flat" upgrade levels: directly taken from player's level */
 			return  player_level;
 		case upgrade_type_hpmax:
 			return
 				DEFAULT_MAX_HEALTH
 				+ ( player_level * MAX_HEALTH_UPGRADE_PER_LEVEL ) ;
+		case upgrade_type_income:
+			return
+				DEFAULT_INCOME
+				+ ( player_level / UPGRADE_INCOME_LEVEL_DISTANCE ) ;
 		default:
 			printf("Unrecognized upgrade_type %d" , type);
 	}
@@ -334,6 +351,35 @@ player_upgrade_income(
 	}
 }
 
+
+void
+player_upgrade_vault(
+		struct gamestate * gs
+) {
+
+	int const max_vault
+		= get_upgrade_maxlevel_generic(
+				 upgrade_type_vault
+				,gs->player.level);
+	if( gs->player_data.vault >= max_vault ) {
+		printf( "You cannot upgrade vault anymore.\n" );
+		return;
+	}
+
+	int const upgrade_cost = get_upgrade_cost_generic(upgrade_type_vault , gs->player_data.vault);
+	if( gs->player_data.money > upgrade_cost ) {
+		gs->player_data.money -= upgrade_cost;
+		(++(gs->player_data.vault));
+		printf("Upgraded vault to level:%d. Cost:%d\n"
+				, gs->player_data.vault
+				, upgrade_cost);
+	} else {
+		printf("insufficient funds to upgrade vault to level %d; need:%d , have:%d\n"
+				, gs->player_data.vault
+				, upgrade_cost
+				, gs->player_data.money );
+	}
+}
 
 
 void
@@ -619,11 +665,30 @@ void print_cli_help() {
 void
 special_debug(void)
 {
-	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 40) );
-	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 41) );
-	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 42) );
-	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 43) );
-	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 44) );
+	int const cost_atk
+		= get_upgrade_cost_generic(
+				upgrade_type_attack
+				, 5);
+	int const cost_def
+		= get_upgrade_cost_generic(
+				upgrade_type_defense
+				, 5);
+	int const cost_hpmax
+		= get_upgrade_cost_generic(upgrade_type_hpmax , 37)
+		+ get_upgrade_cost_generic(upgrade_type_hpmax , 38)
+		+ get_upgrade_cost_generic(upgrade_type_hpmax , 39)
+		+ get_upgrade_cost_generic(upgrade_type_hpmax , 40) ;
+	int const cost_income
+		= get_upgrade_cost_generic(upgrade_type_income , 2) ;
+
+	printf("total_upgrade_cost: %d(atk:%d,def:%d,hp:%d,income:%d)"
+			, cost_atk + cost_def + cost_hpmax + cost_income
+			, cost_atk
+			, cost_def
+			, cost_hpmax
+			, cost_income );
+
+	exit(EXIT_SUCCESS);
 }
 
 
@@ -636,6 +701,7 @@ int main(int argc , char * argv[])
 	bool flag_upgrade_defense = false;
 	bool flag_upgrade_health  = false;
 	bool flag_upgrade_income  = false;
+	bool flag_upgrade_vault  = false;
 	bool flag_action_combat = false;
 	bool flag_player_chose_enemy_level = false;
 	int chosen_enemy_level = 0;
@@ -644,7 +710,7 @@ int main(int argc , char * argv[])
 		// TODO
 		if( 0 == strcmp(argv[i] , "-h") ) {
 			print_cli_help();
-		} else if( 0 == strcmp(argv[i] , "-d")  ) {
+		} else if( 0 == strcmp(argv[i] , "-D")  ) {
 			special_debug();
 		} else if( 0 == strcmp(argv[i] , "-a")  ) {
 			flag_upgrade_attack = true;
@@ -654,6 +720,8 @@ int main(int argc , char * argv[])
 			flag_upgrade_health = true;
 		} else if( 0 == strcmp(argv[i] , "-i") ) {
 			flag_upgrade_income = true;
+		} else if( 0 == strcmp(argv[i] , "-v") ) {
+			flag_upgrade_vault = true;
 		} else if( 0 == strncmp(argv[i] , "-f" , 2) ) {
 			flag_action_combat = true;
 			if( *(argv[i] + 2) != '\0' ) {
@@ -719,6 +787,10 @@ int main(int argc , char * argv[])
 	if(flag_upgrade_income) {
 		printf("upgrading income\n");
 		player_upgrade_income(&state);
+	}
+	if(flag_upgrade_vault) {
+		printf("upgrading vault\n");
+		player_upgrade_vault(&state);
 	}
 
 	if(flag_heal) {
