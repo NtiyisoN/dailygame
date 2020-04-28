@@ -200,6 +200,66 @@ bool does_savefile_exist(const char * const filename) {
 
 
 /* GAME */
+
+enum upgrade_type {
+	 upgrade_type_income
+	,upgrade_type_attack
+	,upgrade_type_defense
+	,upgrade_type_hpmax
+};
+
+int
+get_upgrade_cost_generic(
+		 enum upgrade_type type
+		,int const stat_level
+) {
+	int upgrade_cost = 0;
+	switch(type) {
+		case upgrade_type_income:
+			upgrade_cost
+				= ( UPGRADE_INCOME_COST_BASE << stat_level );
+			break;
+		case upgrade_type_attack:
+		case upgrade_type_defense:
+			upgrade_cost
+				= ( 1 << (stat_level));
+			break;
+		case upgrade_type_hpmax:
+			upgrade_cost
+				= stat_level <= DEFAULT_MAX_HEALTH
+				? 1
+				: 1 << ((stat_level - DEFAULT_MAX_HEALTH) / 4) ;
+			break;
+		default:
+			printf("Unrecognized upgrade_type %d" , type);
+	}
+	return upgrade_cost; // TODO: better error handling
+}
+
+
+int
+get_upgrade_maxlevel_generic(
+		 enum upgrade_type type
+		,int const player_level
+) {
+	switch(type) {
+		case upgrade_type_income:
+			return
+				DEFAULT_INCOME
+				+ ( player_level / UPGRADE_INCOME_LEVEL_DISTANCE ) ;
+		case upgrade_type_attack:
+		case upgrade_type_defense:
+			return  player_level;
+		case upgrade_type_hpmax:
+			return
+				DEFAULT_MAX_HEALTH
+				+ ( player_level * MAX_HEALTH_UPGRADE_PER_LEVEL ) ;
+		default:
+			printf("Unrecognized upgrade_type %d" , type);
+	}
+	return 0; // TODO: better error handling
+}
+
 int
 get_upgrade_cost(
 		int const current_level
@@ -242,8 +302,9 @@ int
 get_max_upgrade_income(
 		int const level
 ) {
-	return DEFAULT_INCOME
-		+ ( level / UPGRADE_INCOME_LEVEL_DISTANCE ) ;
+	return get_upgrade_maxlevel_generic( upgrade_type_income , level );
+//	return DEFAULT_INCOME
+//		+ ( level / UPGRADE_INCOME_LEVEL_DISTANCE ) ;
 }
 
 
@@ -279,11 +340,15 @@ void
 player_upgrade_attack(
 		struct gamestate * gs
 ) {
+	int const upgrade_cost
+		= get_upgrade_cost_generic(
+				 upgrade_type_attack
+				,gs->player.bonus_attack);
+	printf( "Upgrading attack will cost %d... " , upgrade_cost );
 	if( gs->player.bonus_attack >= gs->player.level ) {
 		printf( "You cannot upgrade attack anymore. Fight something to gain level.\n" );
 		return;
 	}
-	int const upgrade_cost = get_upgrade_cost(gs->player.bonus_attack);
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
 		(++(gs->player.bonus_attack));
@@ -298,11 +363,15 @@ void
 player_upgrade_defense(
 		struct gamestate * gs
 ) {
+	int const upgrade_cost
+		= get_upgrade_cost_generic(
+				 upgrade_type_defense
+				,gs->player.bonus_defense);
+	printf( "Upgrading defense will cost %d... " , upgrade_cost );
 	if( gs->player.bonus_defense >= gs->player.level  ) {
 		printf( "You cannot upgrade defense anymore. Fight something to gain level.\n" );
 		return;
 	}
-	int const upgrade_cost = get_upgrade_cost(gs->player.bonus_defense);
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
 		(++(gs->player.bonus_defense));
@@ -317,11 +386,15 @@ void
 player_upgrade_health(
 		struct gamestate * gs
 ) {
+	int const upgrade_cost
+		= get_upgrade_cost_generic(
+				 upgrade_type_hpmax
+				,gs->player.hp_max);
+	printf( "Upgrading hpmax will cost %d... " , upgrade_cost );
 	if( gs->player.hp_max >= (get_max_upgrade_health(gs->player.level))  ) {
 		printf( "You cannot upgrade health anymore, you need to level up.\n" );
 		return;
 	}
-	int const upgrade_cost = get_upgrade_cost_health(1 + (gs->player.hp_max));
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
 		(++(gs->player.hp_max));
@@ -538,6 +611,17 @@ void print_cli_help() {
 }
 
 
+void
+special_debug(void)
+{
+	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 40) );
+	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 41) );
+	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 42) );
+	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 43) );
+	printf("%d\n" , get_upgrade_cost_generic( upgrade_type_hpmax , 44) );
+}
+
+
 
 
 int main(int argc , char * argv[])
@@ -555,6 +639,8 @@ int main(int argc , char * argv[])
 		// TODO
 		if( 0 == strcmp(argv[i] , "-h") ) {
 			print_cli_help();
+		} else if( 0 == strcmp(argv[i] , "-d")  ) {
+			special_debug();
 		} else if( 0 == strcmp(argv[i] , "-a")  ) {
 			flag_upgrade_attack = true;
 		} else if( 0 == strcmp(argv[i] , "-d") ) {
@@ -686,6 +772,7 @@ int main(int argc , char * argv[])
 
 
 	save_game(STRING_FILENAME_SAVE , &state , gametime);
+
 
 
 	return 0;
