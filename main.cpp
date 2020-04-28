@@ -657,11 +657,15 @@ int main(int argc , char * argv[])
 		} else if( 0 == strncmp(argv[i] , "-f" , 2) ) {
 			flag_action_combat = true;
 			if( *(argv[i] + 2) != '\0' ) {
-				flag_player_chose_enemy_level = true;
-				sscanf( (argv[i] + 2)
+				int const scan_val = sscanf( (argv[i] + 2)
 						, "%d"
 						, &chosen_enemy_level);
-				printf("player chose enemy level %d\n" , chosen_enemy_level);
+				if( scan_val == 1 ) {
+					flag_player_chose_enemy_level = true;
+					printf("player chose enemy level %d\n" , chosen_enemy_level);
+				} else {
+					printf("error on trying to reading chosen enemy level from argument %s\n" , argv[i]);
+				}
 			}
 		} else if( 0 == strcmp(argv[i] , "-r") ) {
 			flag_heal = true;
@@ -690,12 +694,13 @@ int main(int argc , char * argv[])
 	printf("elapsed	%d\n" , elapsed );
 
 	int const income_progres_old = state.player_data.progres_income + elapsed;
-	int const income = (income_progres_old / INCOME_TICKS_PER_TIMEUNIT) * INCOME_PER_TICK;
+	int const income_ticks = (income_progres_old / INCOME_TICKS_PER_TIMEUNIT) * INCOME_PER_TICK;
 	int const income_progres = income_progres_old % INCOME_TICKS_PER_TIMEUNIT;
-	printf("income	%d(progres:%d)\n" , income, income_progres );
+	int const income = (income_ticks * state.player_data.income);
 
-	state.player_data.money += state.player_data.income;
+	state.player_data.money += income;
 	state.player_data.progres_income = income_progres;
+	printf("income	%d(ticks:%d,progres:%d)\n" , income , income_ticks, income_progres );
 
 
 	if(flag_upgrade_attack) {
