@@ -593,7 +593,12 @@ void
 handle_player_death(gamestate * state)
 {
 	printf( "You died, because your life fell below 0. Don't worry though, this isn't a permadeath game, so you only lost some money for getting 'resurrected'.\nYou will have to pay money to be healed before your next fight.\nTo restore health, run the game with argument '-r'.\n" );
-	state->player_data.money += (state->player.hp_current * HEALING_COST_PER_HP); /* penalty for death. Yes, player can go into negative money! */
+	int healing_cost = (state->player.hp_current * HEALING_COST_PER_HP);
+	int const max_healing_cost = state->player.hp_max * HEALING_COST_PER_HP;
+	if( healing_cost > max_healing_cost ) {
+		healing_cost = max_healing_cost; // cap healing cost
+	}
+	state->player_data.money += healing_cost; /* penalty for death. Yes, player can go into negative money! */
 	state->player.hp_current = 0;
 }
 
