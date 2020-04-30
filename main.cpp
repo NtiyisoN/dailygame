@@ -53,6 +53,7 @@ struct PlayerData {
 	int progres_level;
 	int income;
 	int vault;
+	CombatEntity entity;
 
 	PlayerData();
 };
@@ -64,6 +65,7 @@ PlayerData::PlayerData() {
 	progres_income = 0;
 	progres_level = 0;
 	vault = 0;
+	entity = CombatEntity();
 }
 
 int
@@ -80,7 +82,7 @@ get_vault_capacity(int const vault_level) {
 struct gamestate {
 	time_t time_game_created;
 	time_t time_last_saved;
-	CombatEntity player;
+	//CombatEntity player;
 	PlayerData player_data;
 	gamestate();
 	gamestate(time_t const _time_game_created);
@@ -95,8 +97,8 @@ gamestate::gamestate(
 {
 	time_game_created = _time_game_created;
 	time_last_saved   = _time_game_created;
-	player = CombatEntity();
-	player.hp_max = 8 * player.level;
+	//player = CombatEntity();
+	player_data.entity.hp_max = 8 * player_data.entity.level;
 }
 
 
@@ -111,12 +113,12 @@ void print_gamestate( const struct gamestate gs)
 			, gs.player_data.vault );
 	//printf("gs.player_data.progres_income	%d\n" , gs.player_data.progres_income  );
 	printf("Level	%d (progress:%d/%d)\n"
-			, gs.player.level
+			, gs.player_data.entity.level
 			, gs.player_data.progres_level
-			, get_required_progres_for_next_level(gs.player.level) );
-	printf("HP	%d (max:%d)\n"  , gs.player.hp_current , gs.player.hp_max );
-	printf("ATK	%d\n"  , gs.player.bonus_attack  );
-	printf("DEF	%d\n"  , gs.player.bonus_defense );
+			, get_required_progres_for_next_level(gs.player_data.entity.level) );
+	printf("HP	%d (max:%d)\n"  , gs.player_data.entity.hp_current , gs.player_data.entity.hp_max );
+	printf("ATK	%d\n"  , gs.player_data.entity.bonus_attack  );
+	printf("DEF	%d\n"  , gs.player_data.entity.bonus_defense );
 }
 
 
@@ -141,11 +143,11 @@ write_savefile(
 	fprintf( savefile ,  "%d\n"  , gs->player_data.vault);
 	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_income);
 	fprintf( savefile ,  "%d\n"  , gs->player_data.progres_level);
-	fprintf( savefile ,  "%d\n"  , gs->player.level);
-	fprintf( savefile ,  "%d\n"  , gs->player.hp_current);
-	fprintf( savefile ,  "%d\n"  , gs->player.hp_max);
-	fprintf( savefile ,  "%d\n"  , gs->player.bonus_attack);
-	fprintf( savefile ,  "%d\n"  , gs->player.bonus_defense);
+	fprintf( savefile ,  "%d\n"  , gs->player_data.entity.level);
+	fprintf( savefile ,  "%d\n"  , gs->player_data.entity.hp_current);
+	fprintf( savefile ,  "%d\n"  , gs->player_data.entity.hp_max);
+	fprintf( savefile ,  "%d\n"  , gs->player_data.entity.bonus_attack);
+	fprintf( savefile ,  "%d\n"  , gs->player_data.entity.bonus_defense);
 
 	fclose(savefile);
 	printf( "saved to '%s'\n" , filename  );
@@ -177,11 +179,11 @@ struct gamestate read_savefile(const char * const filename )
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.vault));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_income));
 	fscanf( savefile ,  "%d\n"  , &(gs.player_data.progres_level));
-	fscanf( savefile ,  "%d\n"  , &(gs.player.level));
-	fscanf( savefile ,  "%d\n"  , &(gs.player.hp_current));
-	fscanf( savefile ,  "%d\n"  , &(gs.player.hp_max));
-	fscanf( savefile ,  "%d\n"  , &(gs.player.bonus_attack));
-	fscanf( savefile ,  "%d\n"  , &(gs.player.bonus_defense));
+	fscanf( savefile ,  "%d\n"  , &(gs.player_data.entity.level));
+	fscanf( savefile ,  "%d\n"  , &(gs.player_data.entity.hp_current));
+	fscanf( savefile ,  "%d\n"  , &(gs.player_data.entity.hp_max));
+	fscanf( savefile ,  "%d\n"  , &(gs.player_data.entity.bonus_attack));
+	fscanf( savefile ,  "%d\n"  , &(gs.player_data.entity.bonus_defense));
 
 	fclose(savefile);
 	return gs;
@@ -330,7 +332,7 @@ player_upgrade_income(
 		struct gamestate * gs
 ) {
 
-	int const max_income = get_max_upgrade_income(gs->player.level);
+	int const max_income = get_max_upgrade_income(gs->player_data.entity.level);
 	if( gs->player_data.income >= max_income ) {
 		printf( "You cannot upgrade income anymore.\n" );
 		return;
@@ -360,7 +362,7 @@ player_upgrade_vault(
 	int const max_vault
 		= get_upgrade_maxlevel_generic(
 				 upgrade_type_vault
-				,gs->player.level);
+				,gs->player_data.entity.level);
 	if( gs->player_data.vault >= max_vault ) {
 		printf( "You cannot upgrade vault anymore.\n" );
 		return;
@@ -389,18 +391,18 @@ player_upgrade_attack(
 	int const upgrade_cost
 		= get_upgrade_cost_generic(
 				 upgrade_type_attack
-				,gs->player.bonus_attack);
+				,gs->player_data.entity.bonus_attack);
 	printf( "Upgrading attack will cost %d... " , upgrade_cost );
-	if( gs->player.bonus_attack >= gs->player.level ) {
+	if( gs->player_data.entity.bonus_attack >= gs->player_data.entity.level ) {
 		printf( "You cannot upgrade attack anymore. Fight something to gain level.\n" );
 		return;
 	}
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
-		(++(gs->player.bonus_attack));
-		printf("Upgraded attack to level:%d. Cost:%d\n" , gs->player.bonus_attack , upgrade_cost);
+		(++(gs->player_data.entity.bonus_attack));
+		printf("Upgraded attack to level:%d. Cost:%d\n" , gs->player_data.entity.bonus_attack , upgrade_cost);
 	} else {
-		printf("insufficient funds to upgrade attack to level %d; need:%d , have:%d\n" , gs->player.bonus_attack , upgrade_cost , gs->player_data.money );
+		printf("insufficient funds to upgrade attack to level %d; need:%d , have:%d\n" , gs->player_data.entity.bonus_attack , upgrade_cost , gs->player_data.money );
 	}
 }
 
@@ -412,18 +414,18 @@ player_upgrade_defense(
 	int const upgrade_cost
 		= get_upgrade_cost_generic(
 				 upgrade_type_defense
-				,gs->player.bonus_defense);
+				,gs->player_data.entity.bonus_defense);
 	printf( "Upgrading defense will cost %d... " , upgrade_cost );
-	if( gs->player.bonus_defense >= gs->player.level  ) {
+	if( gs->player_data.entity.bonus_defense >= gs->player_data.entity.level  ) {
 		printf( "You cannot upgrade defense anymore. Fight something to gain level.\n" );
 		return;
 	}
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
-		(++(gs->player.bonus_defense));
-		printf("Upgraded defense to level:%d. Cost:%d\n" , gs->player.bonus_defense , upgrade_cost);
+		(++(gs->player_data.entity.bonus_defense));
+		printf("Upgraded defense to level:%d. Cost:%d\n" , gs->player_data.entity.bonus_defense , upgrade_cost);
 	} else {
-		printf("insufficient funds to upgrade defense to level %d; need:%d , have:%d\n" , gs->player.bonus_defense , upgrade_cost , gs->player_data.money );
+		printf("insufficient funds to upgrade defense to level %d; need:%d , have:%d\n" , gs->player_data.entity.bonus_defense , upgrade_cost , gs->player_data.money );
 	}
 }
 
@@ -435,16 +437,16 @@ player_upgrade_health(
 	int const upgrade_cost
 		= get_upgrade_cost_generic(
 				 upgrade_type_hpmax
-				,gs->player.hp_max);
+				,gs->player_data.entity.hp_max);
 	printf( "Upgrading hpmax will cost %d... " , upgrade_cost );
-	if( gs->player.hp_max >= (get_max_upgrade_health(gs->player.level))  ) {
+	if( gs->player_data.entity.hp_max >= (get_max_upgrade_health(gs->player_data.entity.level))  ) {
 		printf( "You cannot upgrade health anymore, you need to level up.\n" );
 		return;
 	}
 	if( gs->player_data.money > upgrade_cost ) {
 		gs->player_data.money -= upgrade_cost;
-		(++(gs->player.hp_max));
-		printf("Upgraded hp_max to:%d. Cost:%d\n" , gs->player.hp_max , upgrade_cost);
+		(++(gs->player_data.entity.hp_max));
+		printf("Upgraded hp_max to:%d. Cost:%d\n" , gs->player_data.entity.hp_max , upgrade_cost);
 	} else {
 		printf("insufficient funds to upgrade health; need:%d , have:%d\n"
 				, upgrade_cost
@@ -606,11 +608,11 @@ int get_exp_reward(
 void
 gamestate_heal(gamestate * gs) {
 	printf( "Healing(money_per_hp:%d)...  " , HEALING_COST_PER_HP );
-	if( gs->player.hp_current >= gs->player.hp_max ) {
+	if( gs->player_data.entity.hp_current >= gs->player_data.entity.hp_max ) {
 		printf("didn't heal. hp not lower than max.\n");
 		return;
 	}
-	if( gs->player.hp_current < 0 ) {
+	if( gs->player_data.entity.hp_current < 0 ) {
 		printf( "BUG! hp is lower than 0. didn't heal.\n" );
 		return;
 	}
@@ -619,7 +621,7 @@ gamestate_heal(gamestate * gs) {
 		return;
 	}
 
-	int hp_difference = ( gs->player.hp_max  + (- gs->player.hp_current)  );
+	int hp_difference = ( gs->player_data.entity.hp_max  + (- gs->player_data.entity.hp_current)  );
 	int cost = hp_difference * HEALING_COST_PER_HP;
 	if( cost > gs->player_data.money ) {
 		/* don't allow getting into negative money */
@@ -627,7 +629,7 @@ gamestate_heal(gamestate * gs) {
 		cost = hp_difference * HEALING_COST_PER_HP;
 	}
 	gs->player_data.money -= cost;
-	gs->player.hp_current += hp_difference;
+	gs->player_data.entity.hp_current += hp_difference;
 	printf("Healed hp:%d, spent money:%d, current money:%d\n" , hp_difference , cost , gs->player_data.money);
 }
 
@@ -639,13 +641,13 @@ void
 handle_player_death(gamestate * state)
 {
 	printf( "You died, because your life fell below 0. Don't worry though, this isn't a permadeath game, so you only lost some money for getting 'resurrected'.\nYou will have to pay money to be healed before your next fight.\nTo restore health, run the game with argument '-r'.\n" );
-	int healing_cost = (state->player.hp_current * HEALING_COST_PER_HP);
-	int const max_healing_cost = state->player.hp_max * HEALING_COST_PER_HP;
+	int healing_cost = (state->player_data.entity.hp_current * HEALING_COST_PER_HP);
+	int const max_healing_cost = state->player_data.entity.hp_max * HEALING_COST_PER_HP;
 	if( healing_cost > max_healing_cost ) {
 		healing_cost = max_healing_cost; // cap healing cost
 	}
 	state->player_data.money += healing_cost; /* penalty for death. Yes, player can go into negative money! */
-	state->player.hp_current = 0;
+	state->player_data.entity.hp_current = 0;
 }
 
 
@@ -807,33 +809,33 @@ int main(int argc , char * argv[])
 
 	if(flag_action_combat) {
 		// TODO
-		if( state.player.hp_current < 1 ) {
-			printf("you need at least 1 hp to fight(you have %d hp)\n" , state.player.hp_current );
+		if( state.player_data.entity.hp_current < 1 ) {
+			printf("you need at least 1 hp to fight(you have %d hp)\n" , state.player_data.entity.hp_current );
 		} else {
 			const int enemy_level
 				= flag_player_chose_enemy_level
 				? chosen_enemy_level
-				: (1 + state.player.level) ;
-			const int number_of_rounds = 3 + state.player.level;
+				: (1 + state.player_data.entity.level) ;
+			const int number_of_rounds = 3 + state.player_data.entity.level;
 			CombatEntity foe = create_enemy(enemy_level); /* generate worthy opponent, that is opponent with level equal to player */
 			printf("starting combat with level %d foe. (%d rounds).\n"
 					, enemy_level
 					, number_of_rounds);
 			enum result_combat result
 				= combat_perform_combat(
-					 &(state.player)
+					 &(state.player_data.entity)
 					,&foe
 					,number_of_rounds );
 			print_combat_result( result , "you" , "foe" );
-			if( state.player.hp_current < 0 ) { // player died
+			if( state.player_data.entity.hp_current < 0 ) { // player died
 				handle_player_death(&state);
 			} else {
 				printf( "You survived, with %d hp left.\n"
-						, state.player.hp_current );
+						, state.player_data.entity.hp_current );
 			}
 			if( result == result_combat_winner_0 ) {
 				int const reward = get_exp_reward(
-						state.player.level
+						state.player_data.entity.level
 						, enemy_level);
 				printf( "For your victory, you gain reward of %d\n"
 						, reward );
@@ -841,16 +843,16 @@ int main(int argc , char * argv[])
 				/* try to level up */
 				int const required_exp
 					= get_required_progres_for_next_level(
-							state.player.level );
+							state.player_data.entity.level );
 				if( required_exp
 						<=
 						state.player_data.progres_level
 					) {
-					++(state.player.level);
+					++(state.player_data.entity.level);
 					state.player_data.progres_level
 						-= required_exp;
 					printf( "You leveled up to level %d!\n"
-							, state.player.level );
+							, state.player_data.entity.level );
 				}
 			}
 		}
