@@ -31,6 +31,7 @@ CombatEntity::CombatEntity(int const _level) {
 }
 
 CombatEntity::CombatEntity() {
+	level = 1;
 	hp_current = DEFAULT_MAX_HEALTH;
 	hp_max     = DEFAULT_MAX_HEALTH;
 	bonus_attack  = 0;
@@ -83,7 +84,6 @@ PlayerData::PlayerData() {
 	progres_income = 0;
 	progres_level = 0;
 	vault = 0;
-	entity = CombatEntity();
 }
 
 int
@@ -637,6 +637,63 @@ int get_exp_reward(
 }
 
 
+void
+add_exp(
+		 gamestate * gs
+		,int const exp )
+{
+	assert( exp >= 0 );
+	if(exp == 0) {
+		return;
+	}
+
+	int *player_exp = &(gs->player_data.progres_level);
+	(*player_exp) += exp;
+	int const next_level_exp = get_required_progres_for_next_level( gs->player_data.entity.level );
+	if( (*player_exp) >= next_level_exp ) {
+		(*player_exp) = next_level_exp;
+		printf( "You have enough exp to level up! Note, that you won't receive any rewards for winning fights until you level up.\n");
+	}
+}
+
+
+int
+get_cost_for_advancing_character_level( int const char_level )
+{
+	int const cost = (COST_LEVEL_UP_BASE << char_level);
+	return
+		(cost > 1)
+		? cost
+		: 1;
+}
+
+
+void
+advance_level( gamestate * gs )
+{
+	int * char_level = &(gs->player_data.entity.level);
+	int * char_progres_level = &(gs->player_data.progres_level);
+	if( (*char_progres_level)
+	     < get_required_progres_for_next_level( (*char_level) ) ) {
+		printf("You need more exp before you can level up.\n");
+		return;
+	}
+	int * money = &(gs->player_data.money);
+	int const cost = get_cost_for_advancing_character_level( (*char_level) );
+	if( cost > (*money) ) {
+		printf( "To level up, you need more money. need:%d, have:%d\n"
+				,cost
+				,(*money) );
+		return;
+	}
+	(*money) -= cost;
+	++(*char_level);
+	(*char_progres_level) = 0;
+	printf("Leveled up to %d. money spent:%d,left:%d\n"
+			,*char_level
+			,cost
+			,*money );
+}
 
 
 void
@@ -797,6 +854,7 @@ int main(int argc , char * argv[])
 	bool flag_upgrade_health  = false;
 	bool flag_upgrade_income  = false;
 	bool flag_upgrade_vault  = false;
+	bool flag_upgrade_level  = false;
 	bool flag_action_combat = false;
 	bool flag_player_chose_enemy_level = false;
 	int chosen_enemy_level = 0;
@@ -807,6 +865,8 @@ int main(int argc , char * argv[])
 			print_cli_help();
 		} else if( 0 == strcmp(argv[i] , "-D")  ) {
 			special_debug();
+		} else if( 0 == strcmp(argv[i] , "-c")  ) {
+			flag_upgrade_level = true;
 		} else if( 0 == strcmp(argv[i] , "-a")  ) {
 			flag_upgrade_attack = true;
 		} else if( 0 == strcmp(argv[i] , "-d") ) {
@@ -895,6 +955,10 @@ int main(int argc , char * argv[])
 		printf("upgrading vault\n");
 		player_upgrade_vault(&state);
 	}
+	if(flag_upgrade_level) {
+		printf("upgrading level\n");
+		advance_level(&state);
+	}
 
 	if(flag_heal) {
 		gamestate_heal_2(&state);
@@ -932,21 +996,7 @@ int main(int argc , char * argv[])
 						, enemy_level);
 				printf( "For your victory, you gain reward of %d\n"
 						, reward );
-				state.player_data.progres_level += reward;
-				/* try to level up */
-				int const required_exp
-					= get_required_progres_for_next_level(
-							state.player_data.entity.level );
-				if( required_exp
-						<=
-						state.player_data.progres_level
-					) {
-					++(state.player_data.entity.level);
-					state.player_data.progres_level
-						-= required_exp;
-					printf( "You leveled up to level %d!\n"
-							, state.player_data.entity.level );
-				}
+				add_exp( &state , reward );
 			}
 		}
 	}
