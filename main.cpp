@@ -82,7 +82,6 @@ get_vault_capacity(int const vault_level) {
 struct gamestate {
 	time_t time_game_created;
 	time_t time_last_saved;
-	//CombatEntity player;
 	PlayerData player_data;
 	gamestate();
 	gamestate(time_t const _time_game_created);
@@ -97,7 +96,6 @@ gamestate::gamestate(
 {
 	time_game_created = _time_game_created;
 	time_last_saved   = _time_game_created;
-	//player = CombatEntity();
 	player_data.entity.hp_max = 8 * player_data.entity.level;
 }
 
