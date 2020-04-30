@@ -79,6 +79,16 @@ get_vault_capacity(int const vault_level) {
 	return (VAULT_CAPACITY_BASE << vault_level) ;
 }
 
+
+int
+get_number_of_income_ticks_until_vault_full(
+		 int const vault_level
+		,int const money
+		,int const income ) {
+	return (get_vault_capacity(vault_level) - money) / income;
+};
+
+
 struct gamestate {
 	time_t time_game_created;
 	time_t time_last_saved;
@@ -104,11 +114,15 @@ void print_gamestate( const struct gamestate gs)
 {
 	// printf("gs.time_game_created	%lu\n" , gs.time_game_created    );
 	// printf("gs.time_last_saved	%lu\n" , gs.time_last_saved      );
-	printf("Money/Maxmoney(income|vault_level) 	 %d/%d(%d|%d)\n"
+	printf("Money/Maxmoney(income|vault_level) 	 %d/%d(%d|%d)(ticks_to_fill:%d)\n"
 			, gs.player_data.money
 			, get_vault_capacity(gs.player_data.vault)
 			, gs.player_data.income
-			, gs.player_data.vault );
+			, gs.player_data.vault
+			, get_number_of_income_ticks_until_vault_full (
+				 gs.player_data.vault
+				,gs.player_data.money
+				,gs.player_data.income ) );
 	//printf("gs.player_data.progres_income	%d\n" , gs.player_data.progres_income  );
 	printf("Level	%d (progress:%d/%d)\n"
 			, gs.player_data.entity.level
