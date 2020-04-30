@@ -17,3 +17,9 @@ Goals for version "0.3":
 2. ✓(progress) You can upgrade your health.
 3. ✓(progress) You can upgrade your income. (remember to save the player's income in savefile)
 4. ✓You can choose the level of foe which you want to fight against.
+
+Goals for version "0.4":
+1. ✓(mmorpg-parody) Arbitrarily restrict the player's capacity to carry money, so that they have to upgrade their vault. This will be a yet another resource sink!
+1.1. ✓ Helper function: display how long it will take to fill your vault.
+2. ✓Player must pay money to level up
+3. ✓Higher healing cost, the more hp you have. ( calculate the healing cost in `for` loop - this will be the easiest way )
