@@ -713,7 +713,7 @@ get_healing_cost(int const hp)
 
 
 void
-gamestate_heal_2(gamestate * gs) {
+gamestate_heal(gamestate * gs) {
 	printf( "Healing...  " );
 
 	int * player_money = &(gs->player_data.money);
@@ -934,7 +934,7 @@ int main(int argc , char * argv[])
 	}
 
 	if(flag_heal) {
-		gamestate_heal_2(&state);
+		gamestate_heal(&state);
 	}
 
 	if(flag_action_combat) {
