@@ -47,12 +47,30 @@ create_enemy( int const difficulty_level ) {
 }
 
 
+int get_vault_capacity(int const vault_level);
+int get_number_of_income_ticks_until_vault_full( 
+		 int const vault_level
+		,int const money
+		,int const income );
+
 struct PlayerData {
 	int money;
 	int progres_income;
 	int progres_level;
 	int income;
 	int vault;
+
+	int vault_capacity() const {
+		return get_vault_capacity(vault);
+	};
+
+	int ticks_until_vault_full() const {
+		return
+			get_number_of_income_ticks_until_vault_full(
+					 vault
+					,money
+					,income );
+	};
 	CombatEntity entity;
 
 	PlayerData();
@@ -89,6 +107,8 @@ get_number_of_income_ticks_until_vault_full(
 };
 
 
+
+
 struct gamestate {
 	time_t time_game_created;
 	time_t time_last_saved;
@@ -119,10 +139,8 @@ void print_gamestate( const struct gamestate gs)
 			, get_vault_capacity(gs.player_data.vault)
 			, gs.player_data.income
 			, gs.player_data.vault
-			, get_number_of_income_ticks_until_vault_full (
-				 gs.player_data.vault
-				,gs.player_data.money
-				,gs.player_data.income ) );
+			, gs.player_data.ticks_until_vault_full()
+		  );
 	//printf("gs.player_data.progres_income	%d\n" , gs.player_data.progres_income  );
 	printf("Level	%d (progress:%d/%d)\n"
 			, gs.player_data.entity.level
