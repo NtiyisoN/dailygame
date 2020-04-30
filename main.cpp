@@ -766,7 +766,15 @@ int main(int argc , char * argv[])
 	int const income_progres = income_progres_old % INCOME_TICKS_PER_TIMEUNIT;
 	int const income = (income_ticks * state.player_data.income);
 
-	state.player_data.money += income;
+	
+	int const new_player_money = state.player_data.money + income;
+	int const vault_capacity = get_vault_capacity(state.player_data.vault);
+	if(new_player_money >= vault_capacity ) {
+		printf( "You vault is full! You won't get new money until you spend some\n" );
+		state.player_data.money = vault_capacity;
+	} else {
+		state.player_data.money = new_player_money;
+	}
 	state.player_data.progres_income = income_progres;
 	printf("income	%d(ticks:%d,progres:%d)\n" , income , income_ticks, income_progres );
 

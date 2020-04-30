@@ -1,3 +1,4 @@
+
 Goals for version "0.4":
 1.  (mmorpg-parody) Arbitrarily restrict the player's capacity to carry money, so that they have to upgrade their vault. This will be a yet another money/time sink!
 1.1.  Helper function: display how long it will take to fill your vault.
@@ -14,6 +15,8 @@ Required for version "1.0":
 2.  Separation between "log"(mostly for debug) and "interface"(what the player should see)
 3.  Robust argument parsing: use POSIX `getopt(3POSIX)`, or GNU `getopt(3)` or `argp.h` from GNU lib C.
 4.  Better abstraction for upgrade system. Copying code makes for a big mess.
+5.  Move player's `CombatEntity` inside `player_data`
+5.1. write `struct Progress`(and make it part of player_data) for storing progres data
 
 When version "1.0" is functionally complete:
 
