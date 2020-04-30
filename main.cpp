@@ -696,33 +696,6 @@ advance_level( gamestate * gs )
 }
 
 
-void
-gamestate_heal(gamestate * gs) {
-	printf( "Healing(money_per_hp:%d)...  " , HEALING_COST_PER_HP );
-	if( gs->player_data.entity.hp_current >= gs->player_data.entity.hp_max ) {
-		printf("didn't heal. hp not lower than max.\n");
-		return;
-	}
-	if( gs->player_data.entity.hp_current < 0 ) {
-		printf( "BUG! hp is lower than 0. didn't heal.\n" );
-		return;
-	}
-	if( gs->player_data.money < HEALING_COST_PER_HP ) {
-		printf( "didn't heal. You don't have enough money to heal even one hp!\n" );
-		return;
-	}
-
-	int hp_difference = ( gs->player_data.entity.hp_max  + (- gs->player_data.entity.hp_current)  );
-	int cost = hp_difference * HEALING_COST_PER_HP;
-	if( cost > gs->player_data.money ) {
-		/* don't allow getting into negative money */
-		hp_difference = gs->player_data.money / HEALING_COST_PER_HP;
-		cost = hp_difference * HEALING_COST_PER_HP;
-	}
-	gs->player_data.money -= cost;
-	gs->player_data.entity.hp_current += hp_difference;
-	printf("Healed hp:%d, spent money:%d, current money:%d\n" , hp_difference , cost , gs->player_data.money);
-}
 
 
 int
