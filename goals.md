@@ -1,6 +1,6 @@
 
 Goals for version "0.4":
-1.  (mmorpg-parody) Arbitrarily restrict the player's capacity to carry money, so that they have to upgrade their vault. This will be a yet another money/time sink!
+1. ✓(mmorpg-parody) Arbitrarily restrict the player's capacity to carry money, so that they have to upgrade their vault. This will be a yet another resource sink!
 1.1.  Helper function: display how long it will take to fill your vault.
 2.  Player must pay money to level up
 
@@ -31,3 +31,7 @@ Unimportant gimmicks, do it eventually(maybe even never):
 5. penalty for dying
 6. interface: ncurses
 7. interface: stdin
+
+
+Rough ideas:
+1. Add progres to leveling up all stats. This way, player could spent part of money on one stat? Or maybe not - this could potentially devalue the "vault" mechanic.
