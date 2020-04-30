@@ -18,6 +18,7 @@ Required for version "1.0":
 4.  Better abstraction for upgrade system. Copying code makes for a big mess.
 5. ✓ Move player's `CombatEntity` inside `player_data`
 5.1. write `struct Progress`(and make it part of player_data) for storing progres data
+6.  Abstraction for accessing data in gamestate and playerstate.
 
 When version "1.0" is functionally complete:
 
