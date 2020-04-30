@@ -70,7 +70,7 @@ PlayerData::PlayerData() {
 
 int
 get_required_progres_for_next_level(int const current_level) {
-	return (2 << (current_level/2));
+	return (2 << (current_level/4));
 }
 
 
