@@ -668,6 +668,65 @@ gamestate_heal(gamestate * gs) {
 }
 
 
+int
+get_healing_cost(int const hp)
+{
+	int const cost
+		= (HEALING_COST_PER_HP)
+		* (1 + (hp / HEALING_COST_LEVELS_PER_INCREASE));
+	if(cost < HEALING_COST_PER_HP) {
+		return HEALING_COST_PER_HP;
+	} else {
+		return cost;
+	}
+}
+
+
+void
+gamestate_heal_2(gamestate * gs) {
+	printf( "Healing...  " );
+
+	int * player_money = &(gs->player_data.money);
+	int * player_hp_current = &(gs->player_data.entity.hp_current);
+	int player_hp_missing = gs->player_data.entity.hp_max - gs->player_data.entity.hp_current;
+	fprintf( stderr , "STDERR $%d hp%d/%d\n" , *player_money , *player_hp_current , player_hp_missing );
+
+	int heal_total = 0;
+	int cost_total = 0;
+	int cost_per_hp = get_healing_cost( (*player_hp_current) );
+
+	if( (*player_hp_current) < 0 ) {
+		printf( "BUG! hp is lower than 0. didn't heal.\n" );
+		return;
+	}
+	if( !(player_hp_missing > 0) ) {
+		printf("didn't heal. 0 missing hp.\n");
+		return;
+	}
+	if( (*player_money) < cost_per_hp ) {
+		printf( "didn't heal. You don't have enough money to heal even one hp!\n" );
+		return;
+	}
+
+	while(
+			(cost_total < (*player_money) )
+			&&
+			(heal_total < player_hp_missing)
+		 )
+	{
+		cost_total += cost_per_hp;
+		(++heal_total);
+		cost_per_hp = get_healing_cost( (*player_hp_current) + heal_total );
+	}
+
+	(*player_hp_current) += heal_total;
+	(*player_money) -= cost_total;
+
+	printf("Healed hp:%d, spent money:%d, current money:%d\n"
+			, heal_total
+			, cost_total
+			, (*player_money));
+}
 
 
 /* UI */
@@ -838,7 +897,7 @@ int main(int argc , char * argv[])
 	}
 
 	if(flag_heal) {
-		gamestate_heal(&state);
+		gamestate_heal_2(&state);
 	}
 
 	if(flag_action_combat) {

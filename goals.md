@@ -3,7 +3,7 @@ Goals for version "0.4":
 1. ✓(mmorpg-parody) Arbitrarily restrict the player's capacity to carry money, so that they have to upgrade their vault. This will be a yet another resource sink!
 1.1. ✓ Helper function: display how long it will take to fill your vault.
 2.  Player must pay money to level up
-3.  Higher healing cost, the more hp you have. ( calculate the healing cost in `for` loop - this will be the easiest way )
+3. ✓Higher healing cost, the more hp you have. ( calculate the healing cost in `for` loop - this will be the easiest way )
 
 Goals for version "0.5": (update-name "RealTime")
 1.  (technical) cleaner system for handling elapsed time between sessions.
